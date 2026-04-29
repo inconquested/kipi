@@ -1,21 +1,72 @@
-# Next.js template
+# KIPI // INVENTORY MANAGEMENT SYSTEM
 
-This is a Next.js template with shadcn/ui.
+A brutalist, high-contrast inventory tracking and management system designed with the **"Anti-gravity"** aesthetic. Built for efficiency, transparency, and precision.
 
-## Adding components
+## // OVERVIEW
 
-To add components to your app, run the following command:
+KIPI is a full-stack web application designed to manage physical assets within an organization. It balances a rigid, sharp-cornered design language with advanced features like QR code tracking, real-time status monitoring, and automated approval workflows.
 
+## // TECH STACK
+
+- **CORE:** [Next.js 15+](https://nextjs.org/) (App Router)
+- **AUTH:** [Better Auth](https://better-auth.com/)
+- **DATABASE:** [Prisma ORM](https://prisma.io/) (SQLite/PostgreSQL)
+- **STYLING:** [Tailwind CSS](https://tailwindcss.com/)
+- **UI COMPONENTS:** [Shadcn UI](https://ui.shadcn.com/)
+- **ICONS:** [Lucide React](https://lucide.dev/)
+- **ALERTS:** [Sonner](https://sonner.stevenly.me/)
+
+## // KEY FEATURES
+
+- **[ DASHBOARD ]** // Real-time analytics for inventory health and pending requests.
+- **[ INVENTORY MGMT ]** // Granular control over items, categories, and stock levels.
+- **[ QR SYSTEM ]** // Automatic QR code generation for every registered item.
+- **[ APPROVAL QUEUE ]** // Structured workflow for item borrowing and returns.
+- **[ BREADCRUMBS ]** // Dynamic, brutalist navigation across the entire app.
+- **[ LOCALIZATION ]** // Fully localized in Bahasa Indonesia.
+
+## // DESIGN SYSTEM
+
+KIPI follows the **"Anti-gravity"** design language:
+- **ZERO BORDER RADIUS** // Everything is sharp.
+- **HIGH CONTRAST** // Deep blacks, pure whites, and vibrant primary accents.
+- **BRUTALIST TYPOGRAPHY** // Bold, uppercase, and wide-tracked headers.
+- **SUBTLE DYNAMICS** // Scale-based hover effects and smooth layout transitions.
+
+## // GETTING STARTED
+
+### 1. CLONE THE REPOSITORY
 ```bash
-npx shadcn@latest add button
+git clone https://github.com/inconquested/kipi.git
+cd kipi
 ```
 
-This will place the ui components in the `components` directory.
-
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@/components/ui/button";
+### 2. INSTALL DEPENDENCIES
+```bash
+bun install
+# or
+npm install
 ```
+
+### 3. CONFIGURE ENVIRONMENT
+Create a `.env` file and set up your database and auth secrets.
+
+### 4. DATABASE INITIALIZATION
+```bash
+bunx prisma generate
+bunx prisma db push
+bunx prisma db seed
+```
+
+### 5. RUN DEVELOPMENT SERVER
+```bash
+bun dev
+```
+
+## // LICENSE
+
+DISTRIBUTED UNDER THE **MIT LICENSE**.
+
+---
+
+**// KIPI SYSTEM // VER 1.0.0**
