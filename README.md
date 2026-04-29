@@ -25,14 +25,6 @@ KIPI is a full-stack web application designed to manage physical assets within a
 - **[ BREADCRUMBS ]** // Dynamic, brutalist navigation across the entire app.
 - **[ LOCALIZATION ]** // Fully localized in Bahasa Indonesia.
 
-## // DESIGN SYSTEM
-
-KIPI follows the **"Anti-gravity"** design language:
-- **ZERO BORDER RADIUS** // Everything is sharp.
-- **HIGH CONTRAST** // Deep blacks, pure whites, and vibrant primary accents.
-- **BRUTALIST TYPOGRAPHY** // Bold, uppercase, and wide-tracked headers.
-- **SUBTLE DYNAMICS** // Scale-based hover effects and smooth layout transitions.
-
 ## // GETTING STARTED
 
 ### 1. CLONE THE REPOSITORY
