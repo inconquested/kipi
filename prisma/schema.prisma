@@ -1,0 +1,253 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  role          Role      @default(MEMBER)
+
+  // RELATIONS: Explicitly map these to the fields in BorrowRequest
+  // 1. Requests this user created
+  borrowRequests BorrowRequest[] @relation("UserBorrowRequests")
+
+  // 2. Requests this user approved
+  approvedRequests BorrowRequest[] @relation("ApprovedBy")
+
+  //3. Items created by this user
+  inventoryItems InventoryItem[] @relation("CreatedBy")
+  department     Department?     @relation(fields: [departmentId], references: [id])
+  departmentId   String?
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+// ============================================
+// DEPARTMENT MODEL
+// ============================================
+model Department {
+  id   String @id @default(cuid())
+  name String @unique
+  code String @unique // e.g., "DEPT-001"
+
+  // Relations
+  items   InventoryItem[]
+  members User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// INVENTORY ITEM MODEL
+// ============================================
+model InventoryItem {
+  id          String  @id @default(cuid())
+  name        String
+  category    String
+  description String?
+  qrCode      String  @unique // Generated on creation
+
+  // Quantity tracking
+  qtyTotal     Int    @default(0)
+  qtyAvailable Int    @default(0)
+  qtyBorrowed  Int    @default(0)
+  unit         String // "pcs", "box", "unit", etc.
+
+  // Department assignment
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  // Thresholds & status
+  lowThreshold Int        @default(5)
+  status       ItemStatus @default(ACTIVE) // ACTIVE | INACTIVE | ARCHIVED
+
+  // Metadata
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+
+  // Relations
+  borrowRequests BorrowRequest[]
+  transactions   Transaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([departmentId])
+  @@index([qrCode])
+}
+
+enum ItemStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum ProposalType {
+  LOAN
+  CONSUMPTION
+}
+
+enum TransactionStatus {
+  ACTIVE
+  BORROWED
+  RETURNED
+  DONE
+  OVERDUE
+}
+
+// ============================================
+// BORROW REQUEST MODEL
+// ============================================
+model BorrowRequest {
+  id String @id @default(cuid())
+
+  // Item & User references
+  itemId String
+  item   InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("UserBorrowRequests", fields: [userId], references: [id], onDelete: Cascade)
+
+  //Approval references
+  approvedById String?
+  approvedBy   User?   @relation("ApprovedBy", fields: [approvedById], references: [id])
+
+  // Borrow details
+  quantity Int
+  type     ProposalType @default(LOAN)
+  purpose  String? // Optional: why they're borrowing
+
+  // Request lifecycle
+  status      BorrowStatus @default(PENDING)
+  requestedAt DateTime     @default(now())
+
+  // Approval
+  approvedAt      DateTime?
+  rejectionReason String?
+
+  // Return tracking
+  borrowedAt DateTime?
+  dueDate    DateTime?
+  returnedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation to Transaction
+  transaction Transaction?
+
+  @@index([itemId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum BorrowStatus {
+  PENDING // Waiting for admin approval
+  APPROVED // Admin approved, ready to borrow
+  BORROWED // Currently borrowed by user
+  RETURNED // User returned the item
+  REJECTED // Admin rejected the request
+  OVERDUE // Due date passed, not returned
+}
+
+// ============================================
+// TRANSACTION MODEL
+// ============================================
+model Transaction {
+  id         String            @id @default(cuid())
+  proposalId String            @unique
+  proposal   BorrowRequest     @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  itemId     String
+  item       InventoryItem     @relation(fields: [itemId], references: [id])
+
+  userId     String
+  // We don't strictly need a relation to User here if we rely on proposal.user, 
+  // but it's often useful for direct querying.
+
+  quantity   Int
+  type       ProposalType
+  status     TransactionStatus @default(ACTIVE)
+
+  borrowedAt DateTime?
+  returnedAt DateTime?
+  dueDate    DateTime?
+
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([itemId])
+  @@index([userId])
+}
